@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="gatekeeper" default="main" basedir=".">
+    <!-- Sets variables which can later be used. -->
+    <!-- The value of a property is accessed via ${} -->
+    <property name="src.dir" location="src" />
+    <property name="test.dir" location="test" />
+    <property name="build.dir" location="build/classes" />
+    <property name="build.test.dir" location="build/test" />
+    <property name="dist.dir" location="dist" />
+    <property name="lib.dir" location="lib" />
+    <!-- Variables used for JUnit testin -->
+    <property name="test.report.dir" location="report" />
+    <!-- Define the classpath which includes the junit.jar and the classes after compiling-->
+    <path id="lib.class.path">
+        <fileset dir="lib">
+            <include name="**/*.jar" />
+        </fileset>
+    </path>
+    <!-- Deletes the existing build, docs and dist directory-->
+    <target name="clean">
+        <delete dir="${build.dir}" />
+        <delete dir="${test.report.dir}" />
+        <delete dir="${dist.dir}" />
+    </target>
+    <!-- Creates the build, docs and dist directory-->
+    <target name="makedir">
+        <mkdir dir="${build.dir}" />
+        <mkdir dir="${build.test.dir}" />
+        <mkdir dir="${test.report.dir}" />
+        <mkdir dir="${dist.dir}" />
+    </target>
+    <!-- Compiles the java code (including the usage of library for JUnit -->
+    <target name="compile" depends="clean, makedir">
+        <javac srcdir="${src.dir}" destdir="${build.dir}">
+            <classpath refid="lib.class.path" />
+        </javac>
+        <copy todir="${build.dir}">
+            <fileset dir="${src.dir}" includes="**/*.properties">
+                <exclude name="database.properties"/>
+                <exclude name="server.properties"/>
+            </fileset>
+        </copy>
+		<copy todir="${build.dir}">
+            <fileset dir="${src.dir}" includes="**/*.xml">
+                <exclude name="log4j.xml"/>
+            </fileset>
+        </copy>
+        <copy todir="${dist.dir}">
+            <fileset dir="${src.dir}" includes="**/*.properties">
+                <exclude name="dbsetup.properties"/>
+                <exclude name="dbquery.properties"/>
+            </fileset>
+        </copy>
+        <jar destfile="${dist.dir}/${ant.project.name}.jar" basedir="${build.dir}" excludes="**/Test.class">
+            <manifest>
+                <attribute name="Main-Class" value="org.bdlions.server.ServerExecutor"/>
+                <attribute name="Class-Path" value="library.jar ./"/>
+            </manifest>
+        </jar>
+        <jar destfile="${dist.dir}/library.jar" filesetmanifest="mergewithoutmain">
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/activemq-all-5.12.0.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${lib.dir}/jackson-annotations-2.6.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/jackson-core-2.6.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/jackson-databind-2.6.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/javassist.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${lib.dir}/junit-4.10.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/log4j-1.2.17.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/mysql-connector-java-5.1.34-bin.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/netty-buffer-4.0.31.Final.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/netty-codec-4.0.31.Final.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/netty-codec-http-4.0.31.Final.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/netty-common-4.0.31.Final.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/netty-transport-4.0.31.Final.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/slf4j-api-1.7.2.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/slf4j-log4j12-1.7.2.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/vertx-core-3.1.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/vertx-service-factory-3.1.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${lib.dir}/vertx-web-3.1.0.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${lib.dir}/commons-email-1.4.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${lib.dir}/javax.mail.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${lib.dir}/mqtt-client-1.13.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${lib.dir}/hawtdispatch-1.21.jar"/>
+			<zipfileset excludes="META-INF/*.SF" src="${lib.dir}/hawtdispatch-transport-1.22.jar"/>
+        </jar>
+    </target>
+
+    <!-- Run the JUnit Tests -->
+    <!-- Output is XML, could also be plain-->
+    <target name="junit" depends="compile">
+        <junit printsummary="on" fork="true" haltonfailure="yes">
+            <classpath refid="lib.class.path" />
+            <classpath>
+                <pathelement location="${build.dir}" />
+            </classpath>
+            <classpath>
+                <pathelement location="${build.test.dir}" />
+            </classpath>
+            <formatter type="xml" />
+            <formatter type="plain" />
+            <batchtest todir="${test.report.dir}">
+                <fileset dir="${test.dir}">
+                    <include name="**/*Test*.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+    <target name="main" depends="compile">
+        <description>Main target</description>
+    </target>
+</project>
